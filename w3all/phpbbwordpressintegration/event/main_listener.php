@@ -3,7 +3,7 @@
  *
  * phpBB WordPress Integration Common Tasks. An extension for the phpBB Forum Software package.
  *
- * @copyright (c) 2022 - axew3.com
+ * @copyright (c) 2021, axew3, axew3.com
  * @license GNU General Public License, version 2 (GPL-2.0)
  *
  */
@@ -37,7 +37,7 @@ class main_listener implements EventSubscriberInterface
 		$this->wp_w3all_dbpasswd = $wp_w3all_dbpasswd;
 		$this->wp_w3all_table_prefix = $wp_w3all_table_prefix;
 		$this->wp_w3all_wordpress_url = isset($wp_w3all_wordpress_url) ? $wp_w3all_wordpress_url : '';
-          unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix); 
+   unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix);
 	}
 
 
@@ -57,8 +57,8 @@ class main_listener implements EventSubscriberInterface
 	{
     // if updating when on ucp 'Edit profile'
      if( empty($event['cp_data']['pf_phpbb_website']) OR $this->user->data['user_id'] < 3 )
-     { 
-     	return; 
+     {
+     	return;
      }
 
     if( ! empty($event['cp_data']['pf_phpbb_website']) )
@@ -79,16 +79,16 @@ class main_listener implements EventSubscriberInterface
 			return;
 		 }
 
-    // $user->data['user_email'] = old or actual email 
+    // $user->data['user_email'] = old or actual email
     // $event['data']['email'] = new email or actual email
-    
+
 	  if($event['data']['email'] != $this->user->data['user_email'] OR !empty($event['data']['new_password']) && !empty($event['data']['password_confirm']) )
 	  {
 
 		 if(!empty($event['data']['new_password']))
 		 {
-	           $new_password = trim($event['data']['new_password']);
-                   $password = stripslashes(htmlspecialchars($new_password, ENT_COMPAT));
+			 $new_password = trim($event['data']['new_password']);
+       $password = stripslashes(htmlspecialchars($new_password, ENT_COMPAT));
 		   $new_password = password_hash($password, PASSWORD_BCRYPT,['cost' => 12]); // phpBB min cost 12
 		   $newpQ = "user_pass = '". $new_password ."',";
 	  	} else {
@@ -96,8 +96,8 @@ class main_listener implements EventSubscriberInterface
 		 }
 
 		 $db = new \phpbb\db\driver\mysqli();
-                 $db->sql_connect($this->wp_w3all_dbhost, $this->wp_w3all_dbuser, $this->wp_w3all_dbpasswd, $this->wp_w3all_dbname, $this->wp_w3all_dbport, false, false);
-                 $sql = "UPDATE ".$wp_w3all_table_prefix."users SET ".$newpQ." user_email = '". $event['data']['email'] ."' WHERE user_email = '". $this->user->data['user_email'] ."'";
+     $db->sql_connect($this->wp_w3all_dbhost, $this->wp_w3all_dbuser, $this->wp_w3all_dbpasswd, $this->wp_w3all_dbname, $this->wp_w3all_dbport, false, false);
+     $sql = "UPDATE ".$wp_w3all_table_prefix."users SET ".$newpQ." user_email = '". $event['data']['email'] ."' WHERE user_email = '". $this->user->data['user_email'] ."'";
 		 $result = $db->sql_query($sql);
 	  }
 	 }
@@ -108,13 +108,13 @@ class main_listener implements EventSubscriberInterface
 
 		// the user's 'reset_token' db field is not used into the array of data for the being created new user:
 		// so it is added to store a token that then can be checked for a legit WP user insertion
-		// or something else. // db field limit 64 chars 
+		// or something else. // db field limit 64 chars
 
     $token = str_shuffle(  bin2hex(random_bytes((rand(10,30)))) . strtoupper(bin2hex(random_bytes((rand(10,20))))) );
 
     if( strlen($token) > 64 )
-    { 
-     $token = substr($token, -mt_rand(50,64)); 
+    {
+     $token = substr($token, -mt_rand(50,64));
     }
     // so sent/used in function w3_wp_curl(
     $e['sql_ary'] += [ "reset_token" => $token ];
@@ -125,19 +125,19 @@ class main_listener implements EventSubscriberInterface
 		 public function ucp_activate_after($e)
 	{
 
-     // ACCOUNT_ACTIVE deactivated due to registration // email verification confirmed account activated
+		 // ACCOUNT_ACTIVE deactivated due to registration // email verification confirmed account activated
      // ACCOUNT_ACTIVE_PROFILE deactivated due to email change on profile // email change/verification confirmed
-  
+
      // if( $event['message'] == 'ACCOUNT_ACTIVE' OR $event['message'] == 'ACCOUNT_ACTIVE_PROFILE' ){
 
 		if( $e['message'] == 'ACCOUNT_ACTIVE' && !empty($this->wp_w3all_wordpress_url) ){
 
 		 if(self::w3_wp_curl($e['user_row']['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token'] ) === true)
 		 {
-     	          if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
-	           header('Location:'.$this->wp_w3all_wordpress_url);
-                   exit;
-	          }
+     	if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
+				 header('Location:'.$this->wp_w3all_wordpress_url);
+        exit;
+			}
 		 }
     }
 
@@ -165,18 +165,18 @@ class main_listener implements EventSubscriberInterface
 			  header('Location:'.$this->wp_w3all_wordpress_url);
         exit;
 			 }
-		  } 
+		  }
 		}
 
 	}
-	
-	
+
+
 		 public static function w3_wp_curl($uid, $email, $url = '', $avatar_salt = '', $ureset_token = '')
 	{
     if(empty($url)){
     	return false; // Disable the user addition into wordpress, the extension is used only for email, pass and url update
     }
-    
+
    if( !in_array  ('curl', get_loaded_extensions()) ) {
     return false; // Disable, cURL not available
    }
@@ -188,9 +188,9 @@ class main_listener implements EventSubscriberInterface
     } elseif (!empty($ureset_token)){ // used as second chance
     	$w3allastoken = $ureset_token; // set into user_add_modify_data(
      } else { return false; }
-  	 
+
     	//$data = array( 'w3alladdphpbbuid' => $uid, 'w3alladdphpbbuemail' => $email, 'w3alladdphpbbuwpurl' => $url, 'w3allastoken' => $w3allastoken );
-    	$data = array( 'w3alladdphpbbuid' => $uid, 'w3alladdphpbbuemail' => $email, 'w3allastoken' => $w3allastoken );		  
+    	$data = array( 'w3alladdphpbbuid' => $uid, 'w3alladdphpbbuemail' => $email, 'w3allastoken' => $w3allastoken );
 		  $data = http_build_query($data);
        $ch = curl_init();
 
@@ -202,13 +202,13 @@ class main_listener implements EventSubscriberInterface
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     if(curl_exec($ch) === false){
-      curl_close ($ch); 
+      curl_close ($ch);
      return false;
     } else {
-    	 curl_close ($ch); 
+    	 curl_close ($ch);
       return true;
     }
-  }	
-		
+  }
+
 
 }
