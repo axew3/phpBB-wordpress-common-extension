@@ -37,7 +37,7 @@ class main_listener implements EventSubscriberInterface
 		$this->wp_w3all_dbpasswd = $wp_w3all_dbpasswd;
 		$this->wp_w3all_table_prefix = $wp_w3all_table_prefix;
 		$this->wp_w3all_wordpress_url = isset($wp_w3all_wordpress_url) ? $wp_w3all_wordpress_url : '';
-   unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix); 
+          unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix); 
 	}
 
 
@@ -87,8 +87,8 @@ class main_listener implements EventSubscriberInterface
 
 		 if(!empty($event['data']['new_password']))
 		 {
-			 $new_password = trim($event['data']['new_password']);
-       $password = stripslashes(htmlspecialchars($new_password, ENT_COMPAT));
+	           $new_password = trim($event['data']['new_password']);
+                   $password = stripslashes(htmlspecialchars($new_password, ENT_COMPAT));
 		   $new_password = password_hash($password, PASSWORD_BCRYPT,['cost' => 12]); // phpBB min cost 12
 		   $newpQ = "user_pass = '". $new_password ."',";
 	  	} else {
@@ -96,8 +96,8 @@ class main_listener implements EventSubscriberInterface
 		 }
 
 		 $db = new \phpbb\db\driver\mysqli();
-     $db->sql_connect($this->wp_w3all_dbhost, $this->wp_w3all_dbuser, $this->wp_w3all_dbpasswd, $this->wp_w3all_dbname, $this->wp_w3all_dbport, false, false);
-     $sql = "UPDATE ".$wp_w3all_table_prefix."users SET ".$newpQ." user_email = '". $event['data']['email'] ."' WHERE user_email = '". $this->user->data['user_email'] ."'";
+                 $db->sql_connect($this->wp_w3all_dbhost, $this->wp_w3all_dbuser, $this->wp_w3all_dbpasswd, $this->wp_w3all_dbname, $this->wp_w3all_dbport, false, false);
+                 $sql = "UPDATE ".$wp_w3all_table_prefix."users SET ".$newpQ." user_email = '". $event['data']['email'] ."' WHERE user_email = '". $this->user->data['user_email'] ."'";
 		 $result = $db->sql_query($sql);
 	  }
 	 }
@@ -125,7 +125,7 @@ class main_listener implements EventSubscriberInterface
 		 public function ucp_activate_after($e)
 	{
 
-		 // ACCOUNT_ACTIVE deactivated due to registration // email verification confirmed account activated
+     // ACCOUNT_ACTIVE deactivated due to registration // email verification confirmed account activated
      // ACCOUNT_ACTIVE_PROFILE deactivated due to email change on profile // email change/verification confirmed
   
      // if( $event['message'] == 'ACCOUNT_ACTIVE' OR $event['message'] == 'ACCOUNT_ACTIVE_PROFILE' ){
@@ -134,10 +134,10 @@ class main_listener implements EventSubscriberInterface
 
 		 if(self::w3_wp_curl($e['user_row']['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token'] ) === true)
 		 {
-     	if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
-				 header('Location:'.$this->wp_w3all_wordpress_url);
-        exit;
-			}
+     	          if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
+	           header('Location:'.$this->wp_w3all_wordpress_url);
+                   exit;
+	          }
 		 }
     }
 
@@ -149,17 +149,17 @@ class main_listener implements EventSubscriberInterface
 
     // $e['user_row']['user_inactive_reason'] != 0 // the new account require email verification
     // $e['user_id'] // user id
-//file_put_contents('C:\HTDOCS\wp\TESTERphpbb.TXT', $this->config['avatar_salt']); 
+
     if( $e['user_row']['user_new'] != 1 OR $e['user_row']['user_inactive_reason'] != 0 )
     {
     	return; // user to be added after email confirmation
     }
-//file_put_contents('C:\HTDOCS\wp\TESTERphpbbb.TXT', $this->user->data['reset_token']); 
+
     if( $e['user_row']['user_inactive_reason'] == 0 && $e['user_row']['user_new'] == 1 && !empty($this->wp_w3all_wordpress_url) )
 		{
 			if(self::w3_wp_curl($e['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token']) === true)
 			{
-//file_put_contents('C:\HTDOCS\wp\TESTERphpbbbb.TXT', 'tester0'); 
+
 			 if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
 			  //self::w3_wp_curl($e['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url);
 			  header('Location:'.$this->wp_w3all_wordpress_url);
