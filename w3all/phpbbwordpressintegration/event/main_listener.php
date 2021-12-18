@@ -3,7 +3,7 @@
  *
  * phpBB WordPress Integration Common Tasks. An extension for the phpBB Forum Software package.
  *
- * @copyright (c) 2021, axew3, axew3.com
+ * @copyright (c) 2021, axew3 - axew3.com
  * @license GNU General Public License, version 2 (GPL-2.0)
  *
  */
@@ -37,6 +37,8 @@ class main_listener implements EventSubscriberInterface
     $this->wp_w3all_dbpasswd = $wp_w3all_dbpasswd;
     $this->wp_w3all_table_prefix = $wp_w3all_table_prefix;
     $this->wp_w3all_wordpress_url = isset($wp_w3all_wordpress_url) ? $wp_w3all_wordpress_url : '';
+    $this->wp_w3all_autologin = false;
+    $this->wp_w3all_u_reg = false; // if user just added and autologin happen because no confirmation required
    unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix); 
   }
 
@@ -44,18 +46,28 @@ class main_listener implements EventSubscriberInterface
   public static function getSubscribedEvents()
   {
     return array(
-      'core.ucp_activate_after' => 'ucp_activate_after', // Note: email update/change in WordPress, should instead happen when email successfully confirmed (like WP do)?
+      'core.session_create_after'=> 'session_create_after',
       //'core.user_add_modify_data' => 'user_add_modify_data',
       'core.user_add_after' => 'user_add_after',
+      'core.ucp_activate_after' => 'ucp_activate_after', // Note: email update/change in WordPress, should instead happen when email successfully confirmed (like WP do)?
+      'core.ucp_profile_info_modify_sql_ary' => 'ucp_profile_info_modify_sql_ary',     
       'core.ucp_profile_reg_details_validate' => 'ucp_profile_reg_details_validate',
-      'core.ucp_profile_info_modify_sql_ary' => 'ucp_profile_info_modify_sql_ary',
     );
   }
 
+// redirect after phpBB session setup
+     public function session_create_after($event)
+  {
+    if( $this->wp_w3all_autologin === true && $this->wp_w3all_u_reg === true ){
+     header('Location:'.$this->wp_w3all_wordpress_url);
+     exit;
+    }
+  } 
 
+// if updating when on ucp 'Edit profile'
    public function ucp_profile_info_modify_sql_ary($event)
   {
-    // if updating when on ucp 'Edit profile'
+
      if( empty($event['cp_data']['pf_phpbb_website']) OR $this->user->data['user_id'] < 3 )
      { 
       return; 
@@ -71,10 +83,9 @@ class main_listener implements EventSubscriberInterface
     }
   }
 
-
+// if updating when on ucp 'Edit account setting'
    public function ucp_profile_reg_details_validate($event)
   {
-    // if updating when on ucp 'Edit account setting'
      if( !empty($event['error']) OR $this->user->data['user_id'] < 3 ){ // exclude phpBB id2
       return;
      }
@@ -106,7 +117,7 @@ class main_listener implements EventSubscriberInterface
    public function user_add_modify_data($e)
   {
 
-    // the user's 'reset_token' db field is not used into the array of data for the being created new user:
+    // the user's 'reset_token' db field is not filled into the array of data for the being created new user:
     // so it is added to store a token that then can be checked for a legit WP user insertion
     // or something else. // db field limit 64 chars 
 
@@ -116,12 +127,12 @@ class main_listener implements EventSubscriberInterface
     { 
      $token = substr($token, -mt_rand(50,64)); 
     }
-    // so sent/used in function w3_wp_curl(
+
     $e['sql_ary'] += [ "reset_token" => $token ];
 
   }
 
-
+// if account require activation
      public function ucp_activate_after($e)
   {
 
@@ -134,16 +145,20 @@ class main_listener implements EventSubscriberInterface
 
      if(self::w3_wp_curl($e['user_row']['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token'] ) === true)
      {
-      if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
-         header('Location:'.$this->wp_w3all_wordpress_url);
-        exit;
+      if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) )
+      {
+      //$domain = (!$this->config['cookie_domain'] || $this->config['cookie_domain'] == '127.0.0.1' || strpos($this->config['cookie_domain'], '.') === false) ? '' : $this->config['cookie_domain'];
+      //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
+      // header('Location:'.$this->wp_w3all_wordpress_url);
+      // exit;
+       $this->wp_w3all_autologin = true;
       }
      }
     }
 
   }
 
-
+// no activation, immediate access
      public function user_add_after($e)
   {
 
@@ -154,15 +169,18 @@ class main_listener implements EventSubscriberInterface
     {
       return; // user to be added after email confirmation
     }
-
+    
     if( $e['user_row']['user_inactive_reason'] == 0 && $e['user_row']['user_new'] == 1 && !empty($this->wp_w3all_wordpress_url) )
     {
       if(self::w3_wp_curl($e['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token']) === true)
       {
-       if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) ){
-        //self::w3_wp_curl($e['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url);
-        header('Location:'.$this->wp_w3all_wordpress_url);
-        exit;
+       if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) )
+       {
+       //$domain = (!$this->config['cookie_domain'] || $this->config['cookie_domain'] == '127.0.0.1' || strpos($this->config['cookie_domain'], '.') === false) ? '' : $this->config['cookie_domain'];
+       //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
+       //  header('Location:'.$this->wp_w3all_wordpress_url);
+       // exit;
+        $this->wp_w3all_autologin = $this->wp_w3all_u_reg = true;
        }
       } 
     }
@@ -173,7 +191,7 @@ class main_listener implements EventSubscriberInterface
      public static function w3_wp_curl($uid, $email, $url = '', $avatar_salt = '', $ureset_token = '')
   {
     if(empty($url)){
-      return false; // Disable the user addition into wordpress, the extension is used only for email, pass and url update
+      return false; // Disable the user addition into wordpress, the extension used/run only for email, pass and url update
     }
     
    if( !in_array  ('curl', get_loaded_extensions()) ) {
@@ -181,11 +199,11 @@ class main_listener implements EventSubscriberInterface
    }
 
     if(!empty($avatar_salt)){
-     //$tk = stripslashes(htmlspecialchars($avatar_salt, ENT_COMPAT));
-     //$w3allastoken = password_hash($tk, PASSWORD_BCRYPT,['cost' => 12]);
-     $w3allastoken = md5($avatar_salt);
-    } elseif (!empty($ureset_token)){ // used as second chance
-      $w3allastoken = $ureset_token; // set into user_add_modify_data(
+     $tk = stripslashes(htmlspecialchars($avatar_salt, ENT_COMPAT));
+     $w3allastoken = password_hash($tk, PASSWORD_BCRYPT,['cost' => 12]);
+     //$w3allastoken = md5($avatar_salt);
+    } elseif (!empty($ureset_token)){
+      $w3allastoken = $ureset_token;
      } else { return false; }
      
       //$data = array( 'w3alladdphpbbuid' => $uid, 'w3alladdphpbbuemail' => $email, 'w3alladdphpbbuwpurl' => $url, 'w3allastoken' => $w3allastoken );
