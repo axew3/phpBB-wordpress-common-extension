@@ -210,9 +210,9 @@ class main_listener implements EventSubscriberInterface
    }
 
     if(!empty($avatar_salt)){
-     $tk = stripslashes(htmlspecialchars($avatar_salt, ENT_COMPAT));
-     $w3allastoken = password_hash($tk, PASSWORD_BCRYPT,['cost' => 12]);
-     //$w3allastoken = md5($avatar_salt);
+     //$tk = stripslashes(htmlspecialchars($avatar_salt, ENT_COMPAT));
+     //$w3allastoken = password_hash($tk, PASSWORD_BCRYPT,['cost' => 12]);
+       $w3allastoken = password_hash($avatar_salt, PASSWORD_BCRYPT,['cost' => 12]);
     } elseif (!empty($ureset_token)){
       $w3allastoken = $ureset_token;
      } else { return false; }
