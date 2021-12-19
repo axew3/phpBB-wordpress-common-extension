@@ -156,7 +156,7 @@ class main_listener implements EventSubscriberInterface
 
      if(self::w3_wp_curl($e['user_row']['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token'] ) === true)
      {
-      if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) )
+      if( defined("W3ALLREDIRECTUAFTERADD") )
       {
       //$domain = (!$this->config['cookie_domain'] || $this->config['cookie_domain'] == '127.0.0.1' || strpos($this->config['cookie_domain'], '.') === false) ? '' : $this->config['cookie_domain'];
       //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
@@ -185,7 +185,7 @@ class main_listener implements EventSubscriberInterface
     {
       if(self::w3_wp_curl($e['user_id'], $e['user_row']['user_email'], $this->wp_w3all_wordpress_url, $this->config['avatar_salt'], $this->user->data['reset_token']) === true)
       {
-       if( defined("W3ALLREDIRECTUAFTERADD") && !empty($this->wp_w3all_wordpress_url) )
+       if( defined("W3ALLREDIRECTUAFTERADD") )
        {
        //$domain = (!$this->config['cookie_domain'] || $this->config['cookie_domain'] == '127.0.0.1' || strpos($this->config['cookie_domain'], '.') === false) ? '' : $this->config['cookie_domain'];
        //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
