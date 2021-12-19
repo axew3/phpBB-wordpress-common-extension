@@ -38,7 +38,6 @@ class main_listener implements EventSubscriberInterface
     $this->wp_w3all_table_prefix = $wp_w3all_table_prefix;
     $this->wp_w3all_wordpress_url = isset($wp_w3all_wordpress_url) ? $wp_w3all_wordpress_url : '';
     $this->wp_w3all_autologin = false;
-    $this->wp_w3all_u_reg = false; // if user just added and autologin happen because no confirmation required
    unset($wp_w3all_dbhost, $wp_w3all_dbuser, $wp_w3all_dbpasswd, $wp_w3all_dbname, $wp_w3all_table_prefix); 
   }
 
@@ -46,7 +45,8 @@ class main_listener implements EventSubscriberInterface
   public static function getSubscribedEvents()
   {
     return array(
-      'core.session_create_after'=> 'session_create_after',
+      'core.login_box_redirect' => 'login_box_redirect',
+      'core.session_create_after' => 'session_create_after',
       //'core.user_add_modify_data' => 'user_add_modify_data',
       'core.user_add_after' => 'user_add_after',
       'core.ucp_activate_after' => 'ucp_activate_after', // Note: email update/change in WordPress, should instead happen when email successfully confirmed (like WP do)?
@@ -54,11 +54,22 @@ class main_listener implements EventSubscriberInterface
       'core.ucp_profile_reg_details_validate' => 'ucp_profile_reg_details_validate',
     );
   }
+  
+// redirect after a phpBB login
+     public function login_box_redirect($event)
+  {
+    //if( $this->wp_w3all_autologin === true ){
+    if(defined("W3ALLREDIRECTEVERAFTERLOGIN"){
+     header('Location:'.$this->wp_w3all_wordpress_url);
+     exit;
+    }
+    //}
+  }   
 
 // redirect after phpBB session setup
      public function session_create_after($event)
   {
-    if( $this->wp_w3all_autologin === true && $this->wp_w3all_u_reg === true ){
+    if( $this->wp_w3all_autologin === true ){
      header('Location:'.$this->wp_w3all_wordpress_url);
      exit;
     }
@@ -151,7 +162,7 @@ class main_listener implements EventSubscriberInterface
       //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
       // header('Location:'.$this->wp_w3all_wordpress_url);
       // exit;
-       $this->wp_w3all_autologin = true;
+      //$this->wp_w3all_autologin = true;
       }
      }
     }
@@ -180,7 +191,7 @@ class main_listener implements EventSubscriberInterface
        //setcookie('W3ALLTOKENLOGINPHPBBWP', $e['user_row']['reset_token'], 0, '/', $this->config['cookie_domain']);
        //  header('Location:'.$this->wp_w3all_wordpress_url);
        // exit;
-        $this->wp_w3all_autologin = $this->wp_w3all_u_reg = true;
+        $this->wp_w3all_autologin = true;
        }
       } 
     }
